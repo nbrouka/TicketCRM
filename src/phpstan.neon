@@ -1,0 +1,19 @@
+parameters:
+    level: 4
+    paths:
+        - app/
+
+    excludePaths:
+        - storage/
+        - vendor/
+        - public/
+        - resources/
+        - bootstrap/
+        - config/
+        - database/
+        - routes/
+        - tests/
+
+
+    # Laravel-specific configuration
+includes: []
