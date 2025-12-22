@@ -2,16 +2,16 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Models\User;
-use Illuminate\Http\Request;
-use App\Http\Requests\LoginRequest;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\RedirectResponse;
-use App\Http\Requests\RegisterRequest;
 use App\Http\Controllers\Auth\AuthController;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Tests\TestCase;
 
 class AuthControllerTest extends TestCase
 {
@@ -22,24 +22,24 @@ class AuthControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->controller = new AuthController();
+        $this->controller = new AuthController;
     }
 
     public function test_register_method_creates_user()
     {
-        $request = new RegisterRequest();
+        $request = new RegisterRequest;
         $request->merge([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
-            'password_confirmation' => 'password'
+            'password_confirmation' => 'password',
         ]);
 
         $response = $this->controller->register($request);
 
         $this->assertDatabaseHas('users', [
             'name' => 'Test User',
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
         ]);
 
         $user = User::where('email', 'test@example.com')->first();
@@ -52,13 +52,13 @@ class AuthControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
-            'password' => Hash::make('password')
+            'password' => Hash::make('password'),
         ]);
 
-        $request = new LoginRequest();
+        $request = new LoginRequest;
         $request->merge([
             'email' => 'test@example.com',
-            'password' => 'password'
+            'password' => 'password',
         ]);
 
         $response = $this->controller->login($request);
@@ -71,13 +71,13 @@ class AuthControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
-            'password' => Hash::make('password')
+            'password' => Hash::make('password'),
         ]);
 
-        $request = new LoginRequest();
+        $request = new LoginRequest;
         $request->merge([
             'email' => 'test@example.com',
-            'password' => 'wrong_password'
+            'password' => 'wrong_password',
         ]);
 
         $this->expectException(ValidationException::class);
@@ -90,10 +90,10 @@ class AuthControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $request = new Request();
+        $request = new Request;
         $request->setLaravelSession($this->app['session']->driver());
 
-        $this->app['session']->driver()->put('login_' . $this->app['auth']->getDefaultDriver() . '_' . $user->id, $user->id);
+        $this->app['session']->driver()->put('login_'.$this->app['auth']->getDefaultDriver().'_'.$user->id, $user->id);
         $this->app['auth']->login($user);
 
         $response = $this->controller->logout($request);
@@ -104,14 +104,14 @@ class AuthControllerTest extends TestCase
 
     public function test_register_method_fails_with_missing_fields()
     {
-        $request = new RegisterRequest();
+        $request = new RegisterRequest;
         $request->setContainer(app())
             ->setRedirector(app('redirect'))
             ->merge([
                 'name' => '',
                 'email' => 'invalid-email',
                 'password' => '',
-                'password_confirmation' => ''
+                'password_confirmation' => '',
             ]);
 
         $rules = $request->rules();

@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Models\User;
-use Illuminate\View\View;
-use Illuminate\Http\Request;
 use App\Http\Controllers\DashboardController;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
@@ -18,7 +18,7 @@ class DashboardControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->controller = new DashboardController();
+        $this->controller = new DashboardController;
     }
 
     public function test_index_method_returns_dashboard_view()
@@ -39,7 +39,7 @@ class DashboardControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
         ]);
 
         $request = Request::create('/dashboard', 'GET');

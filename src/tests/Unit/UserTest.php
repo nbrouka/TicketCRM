@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class UserTest extends TestCase
 {
@@ -15,7 +15,7 @@ class UserTest extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'John Doe',
-            'email' => 'john@example.com'
+            'email' => 'john@example.com',
         ]);
 
         $this->assertEquals('John Doe', $user->name);
@@ -37,19 +37,19 @@ class UserTest extends TestCase
     public function test_user_email_is_unique()
     {
         $user1 = User::factory()->create([
-            'email' => 'unique@example.com'
+            'email' => 'unique@example.com',
         ]);
 
         $this->expectException(QueryException::class);
 
         User::factory()->create([
-            'email' => 'unique@example.com'
+            'email' => 'unique@example.com',
         ]);
     }
 
     public function test_user_model_has_correct_fillable_attributes()
     {
-        $user = new User();
+        $user = new User;
         $fillable = $user->getFillable();
 
         $expectedAttributes = ['name', 'email', 'password'];
@@ -60,7 +60,7 @@ class UserTest extends TestCase
 
     public function test_user_password_is_hashed_when_set()
     {
-        $user = new User();
+        $user = new User;
         $user->password = 'plain_text_password';
 
         $this->assertNotEquals('plain_text_password', $user->password);
