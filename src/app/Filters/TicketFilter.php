@@ -74,4 +74,16 @@ class TicketFilter extends QueryFilter
 
         return $query;
     }
+
+    public function search($query, $search)
+    {
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('theme', 'like', '%'.$search.'%')
+                    ->orWhere('text', 'like', '%'.$search.'%');
+            });
+        }
+
+        return $query;
+    }
 }

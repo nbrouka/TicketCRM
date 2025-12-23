@@ -11,9 +11,15 @@ class QueryFilter
 {
     protected $request;
 
-    public function __construct(?Request $request = null)
+    public function __construct($request = null)
     {
-        $this->request = $request ?: request();
+        if ($request instanceof Request) {
+            $this->request = $request;
+        } elseif (is_array($request) || is_object($request)) {
+            $this->request = new Request((array) $request);
+        } else {
+            $this->request = request();
+        }
     }
 
     public function apply($query)
@@ -37,6 +43,10 @@ class QueryFilter
 
     protected function getFilters()
     {
-        return $this->request->all();
+        if ($this->request instanceof Request) {
+            return $this->request->all();
+        }
+
+        return (array) $this->request;
     }
 }

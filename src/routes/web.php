@@ -38,7 +38,7 @@ Route::get('/tickets/{ticket}', [TicketController::class, 'show'])
     ->middleware(['web', 'auth'])
     ->name('tickets.show');
 
-Route::get('/tickets/{ticket}/download/{mediaId}', [TicketController::class, 'downloadFile'])
+Route::get('/tickets/{ticket}/files/{mediaId}', [TicketController::class, 'downloadFile'])
     ->middleware(['web', 'auth'])
     ->name('tickets.download');
 
