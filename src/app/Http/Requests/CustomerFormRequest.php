@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,7 +13,8 @@ class CustomerFormRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        // Allow if user is authenticated (for API requests via Sanctum)
+        return $this->user() !== null;
     }
 
     /**

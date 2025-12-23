@@ -14,6 +14,4 @@ parameters:
         - routes/
         - tests/
 
-
-    # Laravel-specific configuration
 includes: []

@@ -31,6 +31,9 @@ RUN docker-php-ext-install pdo_mysql mysqli mbstring exif pcntl bcmath gd dom
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Copy custom php.ini file from the build context
+COPY src/php.ini /usr/local/etc/php/conf.d/custom.ini
+
 # Set working directory
 WORKDIR /var/www
 

@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @property \App\Models\Ticket $resource
+ */
 class TicketResource extends JsonResource
 {
     /**
@@ -15,13 +20,13 @@ class TicketResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->resource->id,
             'customer' => new CustomerResource($this->whenLoaded('customer')),
-            'theme' => $this->theme,
-            'text' => $this->text,
-            'status' => $this->status->value ?? $this->status,
-            'date_answer' => $this->date_answer,
-            'files' => $this->whenLoaded('media', $this->getMedia()->map(function ($media) {
+            'theme' => $this->resource->theme,
+            'text' => $this->resource->text,
+            'status' => $this->resource->status->value ?? $this->resource->status,
+            'date_answer' => $this->resource->date_answer,
+            'files' => $this->whenLoaded('media', $this->resource->getMedia()->map(function ($media) {
                 return [
                     'id' => $media->id,
                     'file_name' => $media->file_name,
@@ -31,8 +36,8 @@ class TicketResource extends JsonResource
                     'created_at' => $media->created_at,
                 ];
             })),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => $this->resource->created_at,
+            'updated_at' => $this->resource->updated_at,
         ];
     }
 }

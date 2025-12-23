@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,7 +13,8 @@ class TicketFormRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        // Allow if user is authenticated (for API requests via Sanctum)
+        return $this->user() !== null;
     }
 
     /**
@@ -22,7 +25,10 @@ class TicketFormRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => 'required|exists:customers,id',
+            'customer_id' => 'nullable|exists:customers,id',
+            'name' => 'required_without:customer_id|string|max:255',
+            'phone' => 'required_without:customer_id|string|max:20',
+            'email' => 'required_without:customer_id|email|unique:customers,email',
             'theme' => 'required|string|max:255',
             'text' => 'required|string',
             'status' => 'nullable|in:new,in_progress,done',

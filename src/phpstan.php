@@ -1,7 +1,7 @@
 <?php
 
 // Configuration to increase memory limit for PHPStan
-ini_set('memory_limit', '512M');
+ini_set('memory_limit', '256M');
 
 return [
     'parameters' => [

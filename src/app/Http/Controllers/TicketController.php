@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateTicketStatusRequest;
 use App\Managers\TicketManager;
 use App\Models\Ticket;
 use App\Services\FileService;
@@ -21,7 +24,7 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
-        $tickets = $this->ticketManager->getFilteredTickets(15, $request);
+        $tickets = $this->ticketManager->getFilteredTickets($request);
 
         return view('tickets.index', compact('tickets'));
     }
@@ -38,22 +41,11 @@ class TicketController extends Controller
         return $this->fileService->downloadTicketFile($ticket, $mediaId);
     }
 
-    public function updateStatus(Ticket $ticket, \Illuminate\Http\Request $request)
+    public function updateStatus(Ticket $ticket, UpdateTicketStatusRequest $request)
     {
-        $request->validate([
-            'status' => 'required|in:new,in_progress,done',
-        ]);
-
-        $updateData = [
+        $ticket->update([
             'status' => $request->status,
-        ];
-
-        // Set date_answer if status is 'done' and it's not already set
-        if ($request->status === 'done' && ! $ticket->date_answer) {
-            $updateData['date_answer'] = now();
-        }
-
-        $ticket->update($updateData);
+        ]);
 
         if ($request->wantsJson()) {
             return response()->json([
