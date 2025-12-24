@@ -11,7 +11,7 @@ class DashboardController extends Controller
     /**
      * Display the dashboard view.
      */
-    public function index()
+    public function index(): View
     {
         return view('dashboard');
     }

@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -17,7 +17,7 @@ class AuthController extends Controller
     /**
      * Register a new user.
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): RedirectResponse
     {
         $user = User::create([
             'name' => $request->name,
@@ -33,7 +33,7 @@ class AuthController extends Controller
     /**
      * Login a user.
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): RedirectResponse
     {
         $user = User::where('email', $request->email)->first();
 
@@ -51,7 +51,7 @@ class AuthController extends Controller
     /**
      * Logout the authenticated user.
      */
-    public function logout(Request $request)
+    public function logout(): RedirectResponse
     {
         auth()->guard('web')->logout();
 

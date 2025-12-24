@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
+use App\Models\Ticket;
 use Illuminate\Database\Eloquent\Builder;
 
 class TicketFilter extends QueryFilter
 {
-    public function dateFrom(Builder $query, $dateFrom)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function dateFrom(Builder $query, string $dateFrom): Builder
     {
         if ($dateFrom) {
             return $query->where('created_at', '>=', $dateFrom.' 00:00:00');
@@ -17,7 +22,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function dateTo(Builder $query, $dateTo)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function dateTo(Builder $query, string $dateTo): Builder
     {
         if ($dateTo) {
             return $query->where('created_at', '<=', $dateTo.' 23:59');
@@ -26,7 +35,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function status(Builder $query, $status)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function status(Builder $query, string $status): Builder
     {
         if ($status) {
             return $query->where('status', $status);
@@ -35,7 +48,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function email(Builder $query, $email)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function email(Builder $query, string $email): Builder
     {
         if ($email) {
             return $query->whereHas('customer', function ($q) use ($email) {
@@ -46,7 +63,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function phone(Builder $query, $phone)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function phone(Builder $query, string $phone): Builder
     {
         if ($phone) {
             return $query->whereHas('customer', function ($q) use ($phone) {
@@ -57,7 +78,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function dateAnswerFrom(Builder $query, $dateAnswerFrom)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function dateAnswerFrom(Builder $query, string $dateAnswerFrom): Builder
     {
         if ($dateAnswerFrom) {
             return $query->where('date_answer', '>=', $dateAnswerFrom.' 00:00:00');
@@ -66,7 +91,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function dateAnswerTo(Builder $query, $dateAnswerTo)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function dateAnswerTo(Builder $query, string $dateAnswerTo): Builder
     {
         if ($dateAnswerTo) {
             return $query->where('date_answer', '<=', $dateAnswerTo.' 23:59:59');
@@ -75,7 +104,11 @@ class TicketFilter extends QueryFilter
         return $query;
     }
 
-    public function search($query, $search)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function search(Builder $query, string $search): Builder
     {
         if ($search) {
             $query->where(function ($q) use ($search) {

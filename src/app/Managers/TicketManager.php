@@ -7,13 +7,17 @@ namespace App\Managers;
 use App\Filters\TicketFilter;
 use App\Models\Customer;
 use App\Models\Ticket;
+use Illuminate\Pagination\CursorPaginator;
 use InvalidArgumentException;
 
 class TicketManager
 {
     const DEFAULT_PER_PAGE = 15;
 
-    public function getFilteredTickets($request = null)
+    /**
+     * @return CursorPaginator<int, Ticket>
+     */
+    public function getFilteredTickets(mixed $request = null): CursorPaginator
     {
         $filter = new TicketFilter($request);
 
@@ -27,19 +31,24 @@ class TicketManager
         return $query->cursorPaginate(self::DEFAULT_PER_PAGE)->withQueryString();
     }
 
-    public function createTicket(array $data)
+    /** @param array<string, mixed> $data */
+    public function createTicket(array $data): Ticket
     {
         return Ticket::create($data);
     }
 
-    public function updateTicketStatus(Ticket $ticket, string $status)
+    public function updateTicketStatus(Ticket $ticket, string $status): bool
     {
         return $ticket->update([
             'status' => $status,
         ]);
     }
 
-    public function createTicketWithCustomer(array $ticketData, ?array $customerData = null, ?int $customerId = null, $files = null)
+    /**
+     * @param  array<string, mixed>  $ticketData
+     * @param  array<string, mixed>|null  $customerData
+     */
+    public function createTicketWithCustomer(array $ticketData, ?array $customerData = null, ?int $customerId = null, mixed $files = null): Ticket
     {
         $ticket = $this->createTicketForCustomer($ticketData, $customerData, $customerId);
 
@@ -51,6 +60,10 @@ class TicketManager
         return $ticket;
     }
 
+    /**
+     * @param  array<string, mixed>  $ticketData
+     * @param  array<string, mixed>|null  $customerData
+     */
     private function createTicketForCustomer(array $ticketData, ?array $customerData, ?int $customerId): Ticket
     {
         if ($customerId) {
@@ -70,6 +83,7 @@ class TicketManager
         ]));
     }
 
+    /** @param array<string, mixed> $customerData */
     private function findOrCreateCustomer(array $customerData): Customer
     {
         $customer = Customer::where('email', $customerData['email'])

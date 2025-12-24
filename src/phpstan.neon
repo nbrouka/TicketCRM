@@ -1,5 +1,5 @@
 parameters:
-    level: 4
+    level: 6
     paths:
         - app/
 
@@ -13,5 +13,12 @@ parameters:
         - database/
         - routes/
         - tests/
+
+    reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        - '#.*HasFactory but does not specify its types: TFactory#'
+        - '#.*Ticket::customer\(\) should return.*but returns.*#'
+        - '#.*Type Illuminate\\\Http\\\Request\|object\|array\|null contains both object and a class type.*#'
 
 includes: []

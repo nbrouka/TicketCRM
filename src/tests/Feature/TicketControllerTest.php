@@ -96,7 +96,7 @@ class TicketControllerTest extends TestCase
         ]);
     }
 
-    public function test_update_ticket_status_returns_json_response()
+    public function test_update_ticket_status_returns_redirect_response()
     {
         $customer = Customer::factory()->create();
         $ticket = Ticket::factory()->create([
@@ -109,11 +109,7 @@ class TicketControllerTest extends TestCase
                 'status' => TicketStatus::IN_PROGRESS->value,
             ]);
 
-        $response->assertJson([
-            'success' => true,
-            'message' => 'Ticket status updated successfully!',
-        ]);
-
+        $response->assertRedirect();
         $this->assertDatabaseHas('tickets', [
             'id' => $ticket->id,
             'status' => TicketStatus::IN_PROGRESS->value,

@@ -9,40 +9,61 @@ use Illuminate\Support\Str;
 
 class QueryFilter
 {
-    protected $request;
+    /** @var Request|array<string, mixed>|null */
+    protected Request|array|null $request = null;
 
-    public function __construct($request = null)
+    /**
+     * @param  Request|array<string, mixed>|object|null  $request
+     */
+    public function __construct(mixed $request = null)
     {
+        if ($request === null) {
+            $this->request = request();
+
+            return;
+        }
+
         if ($request instanceof Request) {
             $this->request = $request;
-        } elseif (is_array($request) || is_object($request)) {
-            $this->request = new Request((array) $request);
-        } else {
-            $this->request = request();
+
+            return;
         }
+
+        if (is_array($request)) {
+            $this->request = new Request($request);
+
+            return;
+        }
+
+        $this->request = new Request((array) $request);
     }
 
-    public function apply($query)
+    public function apply(mixed $query): mixed
     {
         $filters = $this->getFilters();
 
         foreach ($filters as $filter => $value) {
             if (method_exists($this, $this->filterToMethod($filter)) && ! empty($value)) {
                 $method = $this->filterToMethod($filter);
-                $this->$method($query, $value);
+                $query = $this->$method($query, $value);
             }
         }
 
         return $query;
     }
 
-    protected function filterToMethod($filter)
+    protected function filterToMethod(string $filter): string
     {
         return Str::camel($filter);
     }
 
-    protected function getFilters()
+    /** @return array<string, mixed> */
+    protected function getFilters(): array
     {
+        if ($this->request === null) {
+            return [];
+        }
+
         if ($this->request instanceof Request) {
             return $this->request->all();
         }

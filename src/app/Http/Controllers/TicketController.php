@@ -8,13 +8,16 @@ use App\Http\Requests\UpdateTicketStatusRequest;
 use App\Managers\TicketManager;
 use App\Models\Ticket;
 use App\Services\FileService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TicketController extends Controller
 {
-    protected $ticketManager;
+    protected TicketManager $ticketManager;
 
-    protected $fileService;
+    protected FileService $fileService;
 
     public function __construct(TicketManager $ticketManager, FileService $fileService)
     {
@@ -22,38 +25,28 @@ class TicketController extends Controller
         $this->fileService = $fileService;
     }
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $tickets = $this->ticketManager->getFilteredTickets($request);
 
         return view('tickets.index', compact('tickets'));
     }
 
-    public function show(Ticket $ticket)
+    public function show(Ticket $ticket): View
     {
         $ticket->load(['customer', 'media']);
 
         return view('tickets.show', compact('ticket'));
     }
 
-    public function downloadFile(Ticket $ticket, $mediaId)
+    public function downloadFile(Ticket $ticket, int $mediaId): BinaryFileResponse
     {
         return $this->fileService->downloadTicketFile($ticket, $mediaId);
     }
 
-    public function updateStatus(Ticket $ticket, UpdateTicketStatusRequest $request)
+    public function updateStatus(Ticket $ticket, UpdateTicketStatusRequest $request): RedirectResponse
     {
-        $ticket->update([
-            'status' => $request->status,
-        ]);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Ticket status updated successfully!',
-                'ticket' => $ticket->refresh(),
-            ]);
-        }
+        $this->ticketManager->updateTicketStatus($ticket, $request->status);
 
         return redirect()->back()->with('success', 'Ticket status updated successfully!');
     }
