@@ -7,7 +7,6 @@ namespace Tests\Unit;
 use App\Models\Ticket;
 use App\Services\FileService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Response;
 use Illuminate\Http\Testing\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -94,7 +93,7 @@ class FileServiceTest extends TestCase
         $this->fileService->downloadTicketFile($ticket, $media->id);
     }
 
-    public function test_download_ticket_file_prevents_directory_traversal()
+    public function test_download_ticket_file_allows_valid_download()
     {
         Storage::fake('public');
 
@@ -105,13 +104,34 @@ class FileServiceTest extends TestCase
         $media = $ticket->addMedia($file)
             ->toMediaCollection('files');
 
-        // The service should validate the file path to prevent directory traversal
-        // This test ensures the security check is working by attempting to access a file
-        // outside the allowed directory (which should be prevented)
+        // Store the file content in the fake storage
+        Storage::disk('public')->put("{$media->id}/{$media->file_name}", 'Test file content');
+
         $response = $this->fileService->downloadTicketFile($ticket, $media->id);
 
-        // If the security check works properly, it should return a valid response
-        // and not allow access to files outside the allowed path
+        $this->assertInstanceOf(BinaryFileResponse::class, $response);
+    }
+
+    public function test_download_ticket_file_prevents_directory_traversal()
+    {
+        Storage::fake('public');
+
+        $ticket = Ticket::factory()->create();
+
+        // Create a file with a potentially dangerous filename that might attempt directory traversal
+        $file = File::create('../../etc/passwd', 1, 'text/plain');
+        $media = $ticket->addMedia($file)
+            ->toMediaCollection('files');
+
+        // The media library should sanitize the filename, but we still want to make sure
+        // that the service properly validates the file path to prevent directory traversal
+        // Store the file content in the fake storage with the sanitized filename
+        Storage::disk('public')->put("{$media->id}/{$media->file_name}", 'Test file content');
+
+        $response = $this->fileService->downloadTicketFile($ticket, $media->id);
+
+        // The download should succeed because the media library sanitizes the filename
+        // and our path validation confirms the file is within the allowed directory
         $this->assertInstanceOf(BinaryFileResponse::class, $response);
     }
 }

@@ -23,7 +23,7 @@ class FileService
         }
 
         // Handle testing environment separately
-        if (app()->environment('testing')) {
+        if (app()->environment('testing') || \defined('PHPUNIT_COMPOSER_INSTALL')) {
             return $this->handleTestingDownload($media);
         }
 
@@ -59,8 +59,15 @@ class FileService
         if (Storage::disk('public')->exists($storagePath)) {
             $filePath = Storage::disk('public')->path($storagePath);
 
-            // In testing with fake storage, we can't do proper path validation
-            // So we'll trust that the file was properly created during the test
+            // For fake storage in testing, we need a different approach to prevent directory traversal
+            // Since fake storage doesn't have real filesystem paths, we'll validate the path components
+            $normalizedPath = $this->normalizePath($filePath);
+            $normalizedStoragePath = $this->normalizePath(Storage::disk('public')->path(''));
+
+            if (! str_starts_with($normalizedPath, $normalizedStoragePath)) {
+                abort(Response::HTTP_NOT_FOUND);
+            }
+
             return response()->download($filePath, $media->file_name);
         }
 
@@ -68,11 +75,36 @@ class FileService
         if (Storage::disk('public')->exists($publicStoragePath)) {
             $filePath = Storage::disk('public')->path($publicStoragePath);
 
-            // In testing with fake storage, we can't do proper path validation
-            // So we'll trust that the file was properly created during the test
+            // For fake storage in testing, we need a different approach to prevent directory traversal
+            $normalizedPath = $this->normalizePath($filePath);
+            $normalizedStoragePath = $this->normalizePath(Storage::disk('public')->path(''));
+
+            if (! str_starts_with($normalizedPath, $normalizedStoragePath)) {
+                abort(Response::HTTP_NOT_FOUND);
+            }
+
             return response()->download($filePath, $media->file_name);
         }
 
         abort(Response::HTTP_NOT_FOUND);
+    }
+
+    /**
+     * Normalize a file path by resolving directory traversal components
+     */
+    private function normalizePath(string $path): string
+    {
+        $parts = explode(DIRECTORY_SEPARATOR, $path);
+        $normalized = [];
+
+        foreach ($parts as $part) {
+            if ($part === '..') {
+                array_pop($normalized); // Go up one directory
+            } elseif ($part !== '.' && $part !== '') {
+                $normalized[] = $part;
+            }
+        }
+
+        return implode(DIRECTORY_SEPARATOR, $normalized);
     }
 }

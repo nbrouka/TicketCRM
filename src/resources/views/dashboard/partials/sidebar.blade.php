@@ -33,6 +33,15 @@
                         <p>Tickets</p>
                     </a>
                 </li>
+
+                @if (auth()->check() && auth()->user()->hasRole('admin'))
+                    <li class="nav-item">
+                        <a href="/swagger" class="nav-link" target="_blank">
+                            <i class="nav-icon fas fa-book"></i>
+                            <p>API Documentation</p>
+                        </a>
+                    </li>
+                @endif
             </ul>
             <!--end::Sidebar Menu-->
         </nav>

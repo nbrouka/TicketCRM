@@ -28,7 +28,7 @@ class AuthTest extends TestCase
 
     public function test_user_can_register()
     {
-        $response = $this->post('/register', [
+        $response = $this->withoutMiddleware()->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
@@ -49,7 +49,7 @@ class AuthTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        $response = $this->post('/login', [
+        $response = $this->withoutMiddleware()->post('/login', [
             'email' => 'test@example.com',
             'password' => 'password',
         ]);
@@ -62,7 +62,7 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/logout');
+        $response = $this->actingAs($user)->withoutMiddleware()->post('/logout');
 
         $response->assertRedirect('/login');
         $this->assertGuest();

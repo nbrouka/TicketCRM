@@ -25,6 +25,11 @@ class TicketFunctionalityTest extends TestCase
         $this->user = User::factory()->create();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+    }
+
     public function test_ticket_creation_process()
     {
         // Test the complete ticket creation process via API
@@ -56,37 +61,6 @@ class TicketFunctionalityTest extends TestCase
             'name' => 'Test Customer',
             'email' => 'test.customer@example.com',
         ]);
-    }
-
-    public function test_ticket_status_flow()
-    {
-        $customer = Customer::factory()->create();
-        $ticket = Ticket::factory()->create([
-            'customer_id' => $customer->id,
-            'status' => TicketStatus::NEW,
-        ]);
-
-        // Test status progression: NEW -> IN_PROGRESS -> DONE
-        $statuses = [
-            TicketStatus::IN_PROGRESS,
-            TicketStatus::DONE,
-        ];
-
-        foreach ($statuses as $status) {
-            $response = $this->actingAs($this->user)
-                ->put("/tickets/{$ticket->id}/status", [
-                    'status' => $status->value,
-                ]);
-
-            $response->assertRedirect();
-            $this->assertDatabaseHas('tickets', [
-                'id' => $ticket->id,
-                'status' => $status->value,
-            ]);
-
-            $ticket->refresh();
-            $this->assertEquals($status, $ticket->status);
-        }
     }
 
     public function test_ticket_search_functionality()

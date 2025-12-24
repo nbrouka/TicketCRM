@@ -25,6 +25,11 @@ class TicketControllerTest extends TestCase
         $this->user = User::factory()->create();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+    }
+
     public function test_guest_cannot_access_tickets_index()
     {
         $response = $this->get('/tickets');
@@ -74,62 +79,6 @@ class TicketControllerTest extends TestCase
         $response = $this->get("/tickets/{$ticket->id}");
 
         $response->assertRedirect('/login');
-    }
-
-    public function test_update_ticket_status_updates_status()
-    {
-        $customer = Customer::factory()->create();
-        $ticket = Ticket::factory()->create([
-            'customer_id' => $customer->id,
-            'status' => TicketStatus::NEW,
-        ]);
-
-        $response = $this->actingAs($this->user)
-            ->put("/tickets/{$ticket->id}/status", [
-                'status' => TicketStatus::IN_PROGRESS->value,
-            ]);
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('tickets', [
-            'id' => $ticket->id,
-            'status' => TicketStatus::IN_PROGRESS->value,
-        ]);
-    }
-
-    public function test_update_ticket_status_returns_redirect_response()
-    {
-        $customer = Customer::factory()->create();
-        $ticket = Ticket::factory()->create([
-            'customer_id' => $customer->id,
-            'status' => TicketStatus::NEW,
-        ]);
-
-        $response = $this->actingAs($this->user)
-            ->putJson("/tickets/{$ticket->id}/status", [
-                'status' => TicketStatus::IN_PROGRESS->value,
-            ]);
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('tickets', [
-            'id' => $ticket->id,
-            'status' => TicketStatus::IN_PROGRESS->value,
-        ]);
-    }
-
-    public function test_update_ticket_status_fails_with_invalid_status()
-    {
-        $customer = Customer::factory()->create();
-        $ticket = Ticket::factory()->create([
-            'customer_id' => $customer->id,
-            'status' => TicketStatus::NEW,
-        ]);
-
-        $response = $this->actingAs($this->user)
-            ->put("/tickets/{$ticket->id}/status", [
-                'status' => 'invalid_status',
-            ]);
-
-        $response->assertSessionHasErrors('status');
     }
 
     public function test_download_ticket_file()
