@@ -75,6 +75,13 @@ export function clearErrorMessages(form) {
     allInputs.forEach(input => {
         input.style.borderColor = '#ccc';
     });
+
+    // Clear the general error message container
+    const generalErrorContainer = document.getElementById('error-message');
+    if (generalErrorContainer) {
+        generalErrorContainer.style.display = 'none';
+        generalErrorContainer.innerHTML = '';
+    }
 }
 
 /**
@@ -100,6 +107,33 @@ export function displayValidationErrors(errors, form) {
                 inputElement.style.borderColor = '#dc3545';
             }
         }
+    }
+}
+
+/**
+ * Displays all validation errors in a general error message container
+ * @param {Object} errors - Object containing field errors
+ * @param {HTMLElement} form - The form element containing the inputs
+ */
+export function displayAllValidationErrors(errors, form) {
+    const generalErrorContainer = document.getElementById('error-message');
+    if (generalErrorContainer) {
+        // Clear previous errors
+        generalErrorContainer.innerHTML = '';
+
+        // Create a list of all errors
+        const errorList = document.createElement('ul');
+        errorList.style.margin = '0';
+        errorList.style.paddingLeft = '20px';
+
+        for (const field in errors) {
+            const errorItem = document.createElement('li');
+            errorItem.textContent = `${field.charAt(0).toUpperCase() + field.slice(1)}: ${errors[field][0]}`;
+            errorList.appendChild(errorItem);
+        }
+
+        generalErrorContainer.appendChild(errorList);
+        generalErrorContainer.style.display = 'block';
     }
 }
 

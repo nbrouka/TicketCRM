@@ -223,3 +223,15 @@ button:hover {
     margin-top: 5px;
     display: none;
 }
+
+#error-message.alert {
+    margin-top: 15px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: none;
+}
+
+#error-message ul {
+    margin: 0;
+    padding-left: 20px;
+}

@@ -1,5 +1,5 @@
 import { validateStep } from './validation.js';
-import { showStep, clearErrorMessages, displayValidationErrors, updateSubmitButtonState } from './ui-updater.js';
+import { showStep, clearErrorMessages, displayValidationErrors, updateSubmitButtonState, displayAllValidationErrors } from './ui-updater.js';
 import { handleFiles, setupDragAndDrop } from './file-handler.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -84,42 +84,40 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Handle validation errors or other issues
                         if (data.errors) {
                             displayValidationErrors(data.errors, form);
+                            // Also display all errors in the general error message container
+                            displayAllValidationErrors(data.errors, form);
                         } else {
                             const errorMsg = data.message || 'An error occurred while submitting feedback.';
                             // Create and show error message in a section instead of alert
-                            const errorMessage = document.createElement('div');
-                            errorMessage.className = 'alert alert-danger mt-3';
-                            errorMessage.id = 'error-message';
-                            errorMessage.textContent = errorMsg;
+                            const errorMessage = document.getElementById('error-message');
+                            if (errorMessage) {
+                                errorMessage.textContent = errorMsg;
+                                errorMessage.style.display = 'block';
 
-                            // Insert the error message before the form
-                            const formContainer = document.querySelector('.form-container');
-                            formContainer.insertBefore(errorMessage, formContainer.firstChild);
-
-                            // Auto-hide the error message after 5 seconds
-                            setTimeout(() => {
-                                errorMessage.remove();
-                            }, 5000);
+                                // Auto-hide the error message after 5 seconds
+                                setTimeout(() => {
+                                    errorMessage.style.display = 'none';
+                                    errorMessage.innerHTML = '';
+                                }, 5000);
+                            }
                         }
                     }
                 });
             })
             .catch(error => {
                 console.error('Error:', error);
-                // Create and show error message in a section instead of alert
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'alert alert-danger mt-3';
-                errorMessage.id = 'error-message';
-                errorMessage.textContent = 'An error occurred while submitting feedback.';
+                // Show error message in the general error message container
+                const errorMessage = document.getElementById('error-message');
+                if (errorMessage) {
+                    errorMessage.textContent = 'An error occurred while submitting feedback.';
+                    errorMessage.style.display = 'block';
 
-                // Insert the error message before the form
-                const formContainer = document.querySelector('.form-container');
-                formContainer.insertBefore(errorMessage, formContainer.firstChild);
-
-                // Auto-hide the error message after 5 seconds
-                setTimeout(() => {
-                    errorMessage.remove();
-                }, 5000);
+                    // Auto-hide the error message after 5 seconds
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                        errorMessage.innerHTML = '';
+                    }, 5000);
+                }
             })
             .finally(() => {
                 // Reset button state

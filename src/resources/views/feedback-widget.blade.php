@@ -9,6 +9,7 @@
                 @csrf
                 <h2>Contact Us</h2>
                 <p id="form-description">Step 1 of 3: Contact Information</p>
+                <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
 
                 <!-- Step 1: Contacts -->
                 <div class="step active" data-step="1">
@@ -41,7 +42,7 @@
                         <div id="theme-error" class="error-message"></div>
                     </div>
                     <div class="form-group">
-                        <label for="message">Text <span>*</span>:</label>
+                        <label for="text">Text <span>*</span>:</label>
                         <textarea id="text" name="text" rows="4" required></textarea>
                         <div id="text-error" class="error-message"></div>
                     </div>
