@@ -2,13 +2,13 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
 // Welcome route
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class, 'welcome']);
 
 // Dashboard route - protected
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -16,13 +16,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 // Authentication views
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+Route::get('/login', [AuthController::class, 'showLogin'])
+    ->name('login');
 
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
+Route::get('/register', [AuthController::class, 'showRegister'])
+    ->name('register');
 
 // Authentication routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -45,3 +43,11 @@ Route::get('/tickets/{ticket}/files/{mediaId}', [TicketController::class, 'downl
 Route::put('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])
     ->middleware(['web', 'auth'])
     ->name('tickets.updateStatus');
+
+// Feedback widget routes
+Route::get('/feedback-widget', [FeedbackController::class, 'show'])
+    ->middleware(['web'])
+    ->name('feedback.widget');
+Route::get('/feedback-demo', [FeedbackController::class, 'demo'])
+    ->middleware(['web'])
+    ->name('feedback.demo');
