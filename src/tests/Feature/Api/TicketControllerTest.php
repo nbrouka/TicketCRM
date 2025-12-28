@@ -115,7 +115,7 @@ class TicketControllerTest extends TestCase
             'name' => 'API Customer',
             'phone' => '+1234567890',
             'email' => 'api.customer@example.com',
-            'files' => [$file1, $file2],
+            'attachments' => [$file1, $file2],
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/tickets', $requestData);

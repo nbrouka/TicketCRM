@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Ticket;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -23,12 +25,12 @@ class FileService
         }
 
         // Handle testing environment separately
-        if (app()->environment('testing') || \defined('PHPUNIT_COMPOSER_INSTALL')) {
+        if (app()->environment('testing')) {
             return $this->handleTestingDownload($media);
         }
 
         // For non-testing environments, use the actual file path
-        $filePath = storage_path('app/public/'.$media->id.'/'.$media->file_name);
+        $filePath = storage_path('app/public/' . $media->id . '/' . $media->file_name);
         $realPath = realpath($filePath);
         $allowedDir = realpath(storage_path('app/public/'));
 
@@ -41,6 +43,33 @@ class FileService
         }
 
         return response()->download($filePath, $media->file_name);
+    }
+
+    /**
+     * Extract files from request, checking for attachments field
+     *
+     * @return array<UploadedFile>|null
+     */
+    public function extractFilesFromRequest(Request $request): ?array
+    {
+        $files = null;
+
+        if ($request->hasFile('attachments')) {
+            // Handle attachments from feedback widget
+            $files = $request->file('attachments');
+        }
+
+        if (! $files && $request->hasFile('attachments.*')) {
+            // Handle nested attachments arrays
+            $files = $request->file('attachments.*');
+        }
+
+        // If we have a single file, make it an array to be consistent
+        if ($files && ! is_array($files)) {
+            $files = [$files];
+        }
+
+        return $files;
     }
 
     /**
@@ -100,7 +129,9 @@ class FileService
         foreach ($parts as $part) {
             if ($part === '..') {
                 array_pop($normalized); // Go up one directory
-            } elseif ($part !== '.' && $part !== '') {
+            }
+
+            if ($part !== '..' && $part !== '.' && $part !== '') {
                 $normalized[] = $part;
             }
         }

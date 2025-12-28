@@ -169,7 +169,7 @@ class TicketFunctionalityTest extends TestCase
             'name' => 'Test Customer',
             'phone' => '+1234567890',
             'email' => 'test@example.com',
-            'files' => [$file],
+            'attachments' => [$file],
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/tickets', $requestData);
