@@ -7,14 +7,16 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
-use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected UserService $userService,
+    ) {}
+
     /**
      * Show the login form.
      */
@@ -36,10 +38,10 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): RedirectResponse
     {
-        $user = User::create([
+        $user = $this->userService->createWebUser([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
         ]);
 
         auth()->guard('web')->login($user);
@@ -52,13 +54,7 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): RedirectResponse
     {
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
+        $user = $this->userService->authenticateWebUser($request->email, $request->password);
 
         auth()->guard('web')->login($user);
 

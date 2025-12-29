@@ -30,7 +30,7 @@ class FileService
         }
 
         // For non-testing environments, use the actual file path
-        $filePath = storage_path('app/public/' . $media->id . '/' . $media->file_name);
+        $filePath = storage_path('app/public/'.$media->id.'/'.$media->file_name);
         $realPath = realpath($filePath);
         $allowedDir = realpath(storage_path('app/public/'));
 
@@ -62,6 +62,11 @@ class FileService
         if (! $files && $request->hasFile('attachments.*')) {
             // Handle nested attachments arrays
             $files = $request->file('attachments.*');
+        }
+
+        if (! $files && $request->hasFile('attachments[]')) {
+            // Handle attachments[] array field (common in forms)
+            $files = $request->file('attachments[]');
         }
 
         // If we have a single file, make it an array to be consistent

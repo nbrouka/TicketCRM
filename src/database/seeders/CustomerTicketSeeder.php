@@ -26,41 +26,67 @@ class CustomerTicketSeeder extends Seeder
         $customers = Customer::factory(self::CUSTOMER_COUNT)->create();
 
         $ticketCount = 0;
+        $totalTickets = self::TOTAL_TARGET_TICKETS;
 
-        foreach ($customers as $customer) {
-            $ticketsForCustomer = max(1, intval(self::TOTAL_TARGET_TICKETS / count($customers)));
+        // Define date ranges for diverse statistics
+        $today = now()->startOfDay();
+        $oneWeekAgo = now()->subWeek()->startOfDay();
+        $oneMonthAgo = now()->subMonth()->startOfDay();
 
-            if ($customer->is($customers->last())) {
-                $ticketsNeeded = self::TOTAL_TARGET_TICKETS - $ticketCount;
-                $ticketsForCustomer = max($ticketsForCustomer, $ticketsNeeded);
-            }
+        // Calculate distribution: 20% today, 30% this week, 30% this month, 20% older
+        $todayTickets = intval($totalTickets * 0.2);
+        $weekTickets = intval($totalTickets * 0.3);
+        $monthTickets = intval($totalTickets * 0.3);
+        $olderTickets = $totalTickets - $todayTickets - $weekTickets - $monthTickets;
 
-            $tickets = Ticket::factory($ticketsForCustomer)->create([
-                'customer_id' => $customer->id,
-            ]);
+        $ticketsCreated = 0;
 
-            // Add random files to each ticket (0 to 5 files)
-            foreach ($tickets as $ticket) {
-                // Add files to first TICKETS_WITH_FILES_LIMIT tickets
-                if ($ticketCount < min(self::TICKETS_WITH_FILES_LIMIT, self::TOTAL_TARGET_TICKETS)) {
-                    $this->addRandomFilesToTicket($ticket);
-                }
-                $ticketCount++;
-            }
+        // Create tickets for today (last 20%)
+        for ($i = 0; $i < $todayTickets; $i++) {
+            $this->createTicketWithDate($customers, $ticketsCreated, $totalTickets);
+            $ticketsCreated++;
         }
 
-        if ($ticketCount < self::TOTAL_TARGET_TICKETS) {
-            $remainingTickets = self::TOTAL_TARGET_TICKETS - $ticketCount;
-            for ($i = 0; $i < $remainingTickets; $i++) {
-                $ticket = Ticket::factory()->create([
-                    'customer_id' => $customers->random()->id,
-                ]);
+        // Create tickets for this week (previous 30%)
+        for ($i = 0; $i < $weekTickets; $i++) {
+            $randomDate = $today->copy()->subDays(rand(1, 6)); // Not including today
+            $this->createTicketWithDate($customers, $ticketsCreated, $totalTickets, $randomDate);
+            $ticketsCreated++;
+        }
 
-                if ($ticketCount < min(self::TICKETS_WITH_FILES_LIMIT + 5, self::TOTAL_TARGET_TICKETS)) {
-                    $this->addRandomFilesToTicket($ticket);
-                }
-                $ticketCount++;
-            }
+        // Create tickets for this month (previous 30%)
+        for ($i = 0; $i < $monthTickets; $i++) {
+            $randomDate = $oneWeekAgo->copy()->subDays(rand(1, 21)); // Not including this week
+            $this->createTicketWithDate($customers, $ticketsCreated, $totalTickets, $randomDate);
+            $ticketsCreated++;
+        }
+
+        // Create tickets from older periods (remaining 20%)
+        for ($i = 0; $i < $olderTickets; $i++) {
+            $randomDate = $oneMonthAgo->copy()->subDays(rand(1, 30)); // Older than one month
+            $this->createTicketWithDate($customers, $ticketsCreated, $totalTickets, $randomDate);
+            $ticketsCreated++;
+        }
+    }
+
+    /**
+     * Create a ticket with a specific created_at date
+     */
+    private function createTicketWithDate($customers, int $ticketCount, int $totalTickets, $date = null): void
+    {
+        if ($date === null) {
+            $date = now(); // Today
+        }
+
+        $ticket = Ticket::factory()->create([
+            'customer_id' => $customers->random()->id,
+            'created_at' => $date,
+            'updated_at' => $date,
+        ]);
+
+        // Add random files to each ticket (0 to 5 files)
+        if ($ticketCount < min(self::TICKETS_WITH_FILES_LIMIT, $totalTickets)) {
+            $this->addRandomFilesToTicket($ticket);
         }
     }
 

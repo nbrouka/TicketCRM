@@ -32,6 +32,26 @@ Route::get('/tickets', [TicketController::class, 'index'])
     ->middleware(['web', 'auth'])
     ->name('tickets.index');
 
+Route::get('/tickets/statistics', [TicketController::class, 'statistics'])
+    ->middleware(['web', 'auth'])
+    ->name('tickets.statistics');
+
+Route::get('/tickets/status-distribution', [TicketController::class, 'statusDistribution'])
+    ->middleware(['web', 'auth'])
+    ->name('tickets.status.distribution');
+
+Route::get('/tickets/statistics-by-month', [TicketController::class, 'statisticsByMonth'])
+    ->middleware(['web', 'auth'])
+    ->name('tickets.statistics.by.month');
+
+Route::get('/tickets/statistics-by-month-data', [TicketController::class, 'statisticsByMonthData'])
+    ->middleware(['web', 'auth'])
+    ->name('tickets.statistics.by.month.data');
+
+Route::get('/tickets/statistics-by-day-data', [TicketController::class, 'statisticsByDayData'])
+    ->middleware(['web', 'auth'])
+    ->name('tickets.statistics.by.day.data');
+
 Route::get('/tickets/{ticket}', [TicketController::class, 'show'])
     ->middleware(['web', 'auth'])
     ->name('tickets.show');

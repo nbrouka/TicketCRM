@@ -17,7 +17,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: 'Tickets')]
+#[OA\Tag(name: 'Public Tickets')]
+#[OA\Tag(name: 'Authenticated Tickets')]
 #[OA\SecurityScheme(
     securityScheme: 'sanctum',
     type: 'http',
@@ -35,15 +36,12 @@ class TicketController extends Controller
 
     /**
      * Store a newly created ticket in storage (authenticated users).
-     *
-     * Note: When sending files, use multipart/form-data content type.
-     * Files should be sent in the 'attachments[]' field.
      */
     #[OA\Post(
         path: '/api/tickets',
         summary: 'Create a new ticket',
         description: 'Creates a new ticket with customer information (authenticated users)',
-        tags: ['Tickets'],
+        tags: ['Authenticated Tickets'],
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -87,14 +85,11 @@ class TicketController extends Controller
     )]
     public function storeForAuthenticated(TicketFormRequest $request): JsonResponse
     {
-        // Handle files properly - check if files were uploaded via multipart form data
-        $files = $this->fileService->extractFilesFromRequest($request);
-
         $ticket = $this->ticketService->createTicketWithCustomer(
             $request->only(['theme', 'text']),
             $request->only(['name', 'phone', 'email']),
             $request->input('customer_id'),
-            $files
+            $this->fileService->extractFilesFromRequest($request)
         );
 
         return response()->json([
@@ -113,7 +108,7 @@ class TicketController extends Controller
         path: '/api/feedback',
         summary: 'Create a ticket from feedback form',
         description: 'Creates a new ticket from the feedback widget form (public endpoint)',
-        tags: ['Tickets'],
+        tags: ['Public Tickets'],
         requestBody: new OA\RequestBody(
             required: true,
             content: [
@@ -152,14 +147,11 @@ class TicketController extends Controller
     )]
     public function store(FeedbackFormRequest $request): JsonResponse
     {
-        // Handle files properly - check if files were uploaded via multipart form data
-        $files = $this->fileService->extractFilesFromRequest($request);
-
         $ticket = $this->ticketService->createTicketWithCustomer(
             $request->only(['theme', 'text']),
             $request->only(['name', 'phone', 'email']),
-            null, // No customer_id for feedback
-            $files
+            null,
+            $this->fileService->extractFilesFromRequest($request)
         );
 
         return response()->json([
@@ -175,7 +167,7 @@ class TicketController extends Controller
         path: '/api/tickets',
         summary: 'Get all tickets',
         description: 'Returns a list of all tickets for authenticated user',
-        tags: ['Tickets'],
+        tags: ['Authenticated Tickets'],
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
@@ -207,7 +199,7 @@ class TicketController extends Controller
         path: '/api/tickets/{ticket}',
         summary: 'Get a specific ticket',
         description: 'Returns details of a specific ticket',
-        tags: ['Tickets'],
+        tags: ['Authenticated Tickets'],
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(
@@ -253,7 +245,7 @@ class TicketController extends Controller
         path: '/api/tickets/{ticket}/status',
         summary: 'Update ticket status',
         description: 'Updates the status of a specific ticket',
-        tags: ['Tickets'],
+        tags: ['Authenticated Tickets'],
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(
@@ -307,5 +299,79 @@ class TicketController extends Controller
             'message' => 'Ticket status updated successfully',
             'ticket' => new TicketResource($ticket->refresh()->load('customer')),
         ], Response::HTTP_OK);
+    }
+
+    /**
+     * Get ticket statistics for different periods.
+     */
+    #[OA\Get(
+        path: '/api/tickets/statistics',
+        summary: 'Get ticket statistics',
+        description: 'Returns ticket statistics for day, week, and month',
+        tags: ['Authenticated Tickets'],
+        security: [['sanctum' => []]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Ticket statistics',
+                content: new OA\MediaType(
+                    mediaType: 'application/json',
+                    schema: new OA\Schema(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'day', type: 'integer', example: 5, description: 'Number of tickets created today'),
+                            new OA\Property(property: 'week', type: 'integer', example: 25, description: 'Number of tickets created this week'),
+                            new OA\Property(property: 'month', type: 'integer', example: 120, description: 'Number of tickets created this month'),
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
+    public function statistics(): JsonResponse
+    {
+        $statistics = $this->ticketService->getTicketStatistics();
+
+        return response()->json($statistics, Response::HTTP_OK);
+    }
+
+    /**
+     * Get ticket statistics grouped by month and status.
+     */
+    #[OA\Get(
+        path: '/api/tickets/statistics-by-month',
+        summary: 'Get ticket statistics grouped by month and status',
+        description: 'Returns ticket statistics grouped by month and status',
+        tags: ['Authenticated Tickets'],
+        security: [['sanctum' => []]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Ticket statistics grouped by month and status',
+                content: new OA\MediaType(
+                    mediaType: 'application/json',
+                    schema: new OA\Schema(
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'month', type: 'string', example: '01', description: 'Month number (01-12)'),
+                                new OA\Property(property: 'year', type: 'string', example: '2025', description: 'Year'),
+                                new OA\Property(property: 'month_year', type: 'string', example: '2025-01', description: 'Combined month and year'),
+                                new OA\Property(property: 'status_counts', type: 'object', description: 'Object with status counts'),
+                            ]
+                        )
+                    )
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
+    public function statisticsByMonth(): JsonResponse
+    {
+        $statistics = $this->ticketService->getTicketStatisticsByMonthAndStatus();
+
+        return response()->json($statistics, Response::HTTP_OK);
     }
 }

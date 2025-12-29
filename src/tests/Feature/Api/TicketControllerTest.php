@@ -215,4 +215,45 @@ class TicketControllerTest extends TestCase
 
         $this->assertEquals(TicketStatus::NEW, $ticket->status);
     }
+
+    public function test_statistics_endpoint_returns_ticket_counts()
+    {
+        // Create tickets for different time periods
+        $now = now();
+        $today = $now->copy()->startOfDay();
+        $weekStart = $now->copy()->startOfWeek();
+        $monthStart = $now->copy()->startOfMonth();
+
+        // Create tickets for today
+        Ticket::factory()->count(3)->create(['created_at' => $today]);
+
+        // Create tickets for this week (but not today)
+        Ticket::factory()->count(4)->create(['created_at' => $weekStart->copy()->addDay()]);
+
+        // Create tickets for this month (but not this week)
+        Ticket::factory()->count(5)->create(['created_at' => $monthStart->copy()->addWeek()]);
+
+        // Create tickets from previous month (should not be counted)
+        Ticket::factory()->count(2)->create(['created_at' => $monthStart->copy()->subMonth()]);
+
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/tickets/statistics');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'day',
+            'week',
+            'month',
+        ]);
+
+        $data = $response->json();
+
+        // Should have 3 tickets created today
+        $this->assertEquals(3, $data['day']);
+
+        // Should have 7 tickets created this week (3 today + 4 other days this week)
+        $this->assertEquals(7, $data['week']);
+
+        // Should have 12 tickets created this month (3 today + 4 this week + 5 other days this month)
+        $this->assertEquals(12, $data['month']);
+    }
 }

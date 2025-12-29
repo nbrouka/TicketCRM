@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TicketController;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -16,12 +17,33 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Test route to verify Sanctum is working
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+// Authentication routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+// Sanctum authenticated routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+
+    // Ticket routes
+    Route::post('/tickets', [TicketController::class, 'storeForAuthenticated']);
+    Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/statistics', [TicketController::class, 'statistics']);
+    Route::get('/tickets/statistics-by-month', [TicketController::class, 'statisticsByMonth']);
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
+    Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
+});
+
+// Public route for feedback form (creates a ticket)
+Route::post('/feedback', [TicketController::class, 'store']);
+
+// Test route to verify Sanctum is working (can be removed later)
+Route::middleware('auth:sanctum')->get('/sanctum/user', function (Request $request) {
     return $request->user();
 });
 
-// Route to test token creation (for testing purposes)
+// Route to test token creation (for testing purposes - can be removed later)
 Route::post('/sanctum/token', function (Request $request) {
     $user = $request->user();
     if ($user) {
@@ -34,15 +56,4 @@ Route::post('/sanctum/token', function (Request $request) {
     return response()->json([
         'message' => 'Not authenticated',
     ], Response::HTTP_UNAUTHORIZED);
-});
-
-// Public route for feedback form (creates a ticket)
-Route::post('/feedback', [TicketController::class, 'store']);
-
-// Sanctum authenticated routes for other ticket operations
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/tickets', [TicketController::class, 'storeForAuthenticated']);
-    Route::get('/tickets', [TicketController::class, 'index']);
-    Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
-    Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
 });

@@ -34,6 +34,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a href="{{ route('feedback.demo') }}" class="nav-link" target="_blank">
+                        <i class="nav-icon fas fa-comment-alt"></i>
+                        <p>Feedback Demo</p>
+                    </a>
+                </li>
+
                 @if (auth()->check() && auth()->user()->hasRole('admin'))
                     <li class="nav-item">
                         <a href="/swagger" class="nav-link" target="_blank">

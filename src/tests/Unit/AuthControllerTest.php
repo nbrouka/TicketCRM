@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class AuthControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->controller = new AuthController;
+        $this->controller = new AuthController(app(UserService::class));
     }
 
     public function test_register_method_creates_user()

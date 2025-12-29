@@ -12,10 +12,256 @@
         }
     ],
     "paths": {
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "description": "Registers a new user and returns an API token",
+                "operationId": "8e4e3cb7b46126f4696379d3c7eeb4ad",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "User name",
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "description": "User email",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "description": "User password",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "Password confirmation",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User registered successfully"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
+                                        "token": {
+                                            "description": "API token for authentication",
+                                            "type": "string",
+                                            "example": "1|exampleapitoken1234567890abcdef"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login user",
+                "description": "Authenticates user and returns an API token",
+                "operationId": "222b2625838e3c57e017987f73598fda",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "description": "User email",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "description": "User password",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User logged in successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User logged in successfully"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
+                                        "token": {
+                                            "description": "API token for authentication",
+                                            "type": "string",
+                                            "example": "1|exampleapitoken1234567890abcdef"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout user",
+                "description": "Logs out the authenticated user by revoking the current token",
+                "operationId": "ad65cbbd4e9f201619eae184a5961a98",
+                "responses": {
+                    "200": {
+                        "description": "User logged out successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User logged out successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get authenticated user",
+                "description": "Returns the authenticated user details",
+                "operationId": "961ad57987905b44ae2e2f40b82e76de",
+                "responses": {
+                    "200": {
+                        "description": "Authenticated user details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "John Doe"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "example": "john@example.com"
+                                        },
+                                        "email_verified_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2023-12-25T10:00:00.00000Z"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2023-12-25T10:00:00.000000Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2023-12-25T10:00:00.0000Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/tickets": {
             "get": {
                 "tags": [
-                    "Tickets"
+                    "Authenticated Tickets"
                 ],
                 "summary": "Get all tickets",
                 "description": "Returns a list of all tickets for authenticated user",
@@ -51,7 +297,7 @@
             },
             "post": {
                 "tags": [
-                    "Tickets"
+                    "Authenticated Tickets"
                 ],
                 "summary": "Create a new ticket",
                 "description": "Creates a new ticket with customer information (authenticated users)",
@@ -59,7 +305,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "theme",
@@ -114,7 +360,7 @@
                                         "format": "date-time",
                                         "example": "2023-12-25T10:00Z"
                                     },
-                                    "attachments": {
+                                    "attachments[]": {
                                         "description": "Attachments to attach to the ticket",
                                         "type": "array",
                                         "items": {
@@ -165,7 +411,7 @@
         "/api/feedback": {
             "post": {
                 "tags": [
-                    "Tickets"
+                    "Public Tickets"
                 ],
                 "summary": "Create a ticket from feedback form",
                 "description": "Creates a new ticket from the feedback widget form (public endpoint)",
@@ -173,7 +419,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "theme",
@@ -207,7 +453,7 @@
                                         "type": "string",
                                         "example": "Detailed feedback message"
                                     },
-                                    "attachments": {
+                                    "attachments[]": {
                                         "description": "Attachments to attach to the ticket",
                                         "type": "array",
                                         "items": {
@@ -250,7 +496,7 @@
         "/api/tickets/{ticket}": {
             "get": {
                 "tags": [
-                    "Tickets"
+                    "Authenticated Tickets"
                 ],
                 "summary": "Get a specific ticket",
                 "description": "Returns details of a specific ticket",
@@ -299,7 +545,7 @@
         "/api/tickets/{ticket}/status": {
             "patch": {
                 "tags": [
-                    "Tickets"
+                    "Authenticated Tickets"
                 ],
                 "summary": "Update ticket status",
                 "description": "Updates the status of a specific ticket",
@@ -376,10 +622,90 @@
                     }
                 ]
             }
+        },
+        "/api/tickets/statistics": {
+            "get": {
+                "tags": [
+                    "Authenticated Tickets"
+                ],
+                "summary": "Get ticket statistics",
+                "description": "Returns ticket statistics for day, week, and month",
+                "operationId": "d0b905803de0d5824273d266db389dc8",
+                "responses": {
+                    "200": {
+                        "description": "Ticket statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "day": {
+                                            "description": "Number of tickets created today",
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "week": {
+                                            "description": "Number of tickets created this week",
+                                            "type": "integer",
+                                            "example": 25
+                                        },
+                                        "month": {
+                                            "description": "Number of tickets created this month",
+                                            "type": "integer",
+                                            "example": 120
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "email_verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-25T10:00:00.00000Z"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-25T10:00:00.0000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-25T10:00:00.0000Z"
+                    }
+                },
+                "type": "object"
+            },
             "Customer": {
                 "properties": {
                     "id": {
@@ -441,7 +767,7 @@
                         "format": "date-time",
                         "example": "2023-12-25T10:00Z"
                     },
-                    "attachments": {
+                    "files": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/File"
@@ -501,7 +827,13 @@
     },
     "tags": [
         {
-            "name": "Tickets"
+            "name": "Authentication"
+        },
+        {
+            "name": "Public Tickets"
+        },
+        {
+            "name": "Authenticated Tickets"
         }
     ]
 }

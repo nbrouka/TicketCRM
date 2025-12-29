@@ -8,6 +8,7 @@ use App\Enums\TicketStatus;
 use App\Managers\TicketManager;
 use App\Models\Customer;
 use App\Models\Ticket;
+use App\Repositories\Interfaces\TicketRepositoryInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -22,7 +23,24 @@ class TicketManagerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->ticketManager = new TicketManager;
+
+        // Mock the repository interface with default empty returns for methods that are not used in these tests
+        $ticketRepositoryMock = $this->createMock(TicketRepositoryInterface::class);
+
+        // Set up default expectations for the repository methods that the TicketManager constructor might use
+        $ticketRepositoryMock
+            ->method('getTicketsWithStatusCount')
+            ->willReturn(collect([]));
+
+        $ticketRepositoryMock
+            ->method('getTicketsGroupedByMonthAndStatus')
+            ->willReturn(collect([]));
+
+        $ticketRepositoryMock
+            ->method('getTicketsGroupedByDayFromRange')
+            ->willReturn(collect([]));
+
+        $this->ticketManager = new TicketManager($ticketRepositoryMock);
     }
 
     public function test_get_filtered_tickets_returns_paginated_results()
@@ -33,7 +51,7 @@ class TicketManagerTest extends TestCase
         $request = new Request;
         $tickets = $this->ticketManager->getFilteredTickets($request);
 
-        $this->assertEquals(15, $tickets->count()); // Default per page is 15
+        $this->assertEquals(TicketManager::DEFAULT_PER_PAGE, $tickets->count());
         $this->assertTrue($tickets->hasMorePages());
     }
 

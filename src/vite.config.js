@@ -12,7 +12,9 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/adminlte.js',
                 'resources/js/bootstrap.js',
+                'resources/js/dashboard.js',
                 'resources/js/feedback-widget.js',
+                'resources/js/chart.js',
                 'resources/css/adminlte.css', // Add separate AdminLTE CSS file
             ],
             refresh: true,

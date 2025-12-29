@@ -7,12 +7,18 @@ namespace App\Managers;
 use App\Filters\TicketFilter;
 use App\Models\Customer;
 use App\Models\Ticket;
+use App\Repositories\Interfaces\TicketRepositoryInterface;
 use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 
 class TicketManager
 {
     const DEFAULT_PER_PAGE = 15;
+
+    public function __construct(
+        protected TicketRepositoryInterface $ticketRepository
+    ) {}
 
     /**
      * @return CursorPaginator<int, Ticket>
@@ -58,6 +64,69 @@ class TicketManager
         }
 
         return $ticket;
+    }
+
+    /**
+     * Find ticket by ID
+     */
+    public function findTicketById(int $id): ?Ticket
+    {
+        return Ticket::with('customer')->find($id);
+    }
+
+    /**
+     * Get all tickets
+     *
+     * @return Collection<int, Ticket>
+     */
+    public function getAllTickets(): Collection
+    {
+        return Ticket::with('customer')->get();
+    }
+
+    /**
+     * Get ticket statistics for day, week, month, and total
+     *
+     * @return array{day: int, week: int, month: int, total: int}
+     */
+    public function getTicketStatistics(): array
+    {
+        return [
+            'day' => Ticket::today()->count(),
+            'week' => Ticket::thisWeek()->count(),
+            'month' => Ticket::thisMonth()->count(),
+            'total' => Ticket::count(),
+        ];
+    }
+
+    /**
+     * Get tickets with raw select query
+     *
+     * @return Collection<int, object>
+     */
+    public function getTicketsWithStatusCount(): Collection
+    {
+        return $this->ticketRepository->getTicketsWithStatusCount();
+    }
+
+    /**
+     * Get tickets with raw select query grouped by month
+     *
+     * @return Collection<int, object>
+     */
+    public function getTicketsGroupedByMonthAndStatus(): Collection
+    {
+        return $this->ticketRepository->getTicketsGroupedByMonthAndStatus();
+    }
+
+    /**
+     * Get tickets with raw select query grouped by day
+     *
+     * @return Collection<int, object>
+     */
+    public function getTicketsGroupedByDayFromRange(string $startDate, string $endDate): Collection
+    {
+        return $this->ticketRepository->getTicketsGroupedByDayFromRange($startDate, $endDate);
     }
 
     /**

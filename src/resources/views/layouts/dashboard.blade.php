@@ -22,7 +22,7 @@
         @include('dashboard.partials.footer')
     </div>
     <!--end::App Wrapper-->
-    @vite(['resources/js/app.js', 'resources/js/adminlte.js'])
+    @vite(['resources/js/app.js', 'resources/js/adminlte.js', 'resources/js/chart.js'])
     @yield('scripts')
 </body>
 
