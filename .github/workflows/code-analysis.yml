@@ -40,6 +40,9 @@ jobs:
       - name: Run tests
         run: |
           cp .env.ci .env
+          # Create a dummy Vite manifest to prevent errors
+          mkdir -p public/build
+          echo '{}' > public/build/manifest.json
           php artisan config:clear
           php artisan test
         working-directory: ./src
