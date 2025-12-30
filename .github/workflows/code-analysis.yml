@@ -21,20 +21,12 @@ jobs:
                   extensions: mbstring, xml, ctype, iconv, intl, pdo, sqlite, pdo_sqlite, curl, json, openssl, tokenizer, zip, unzip, gmp, bcmath
                   coverage: xdebug
 
-            - name: Copy environment file
-              run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-              working-directory: ./src
-
             - name: Install Composer dependencies
               run: composer install --no-interaction --no-progress --optimize-autoloader --prefer-dist
               working-directory: ./src
 
             - name: Install Node.js dependencies
               run: npm ci
-              working-directory: ./src
-
-            - name: Generate application key
-              run: php artisan key:generate
               working-directory: ./src
 
             - name: Run Laravel Pint
