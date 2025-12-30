@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\TicketStatus;
+use App\Exceptions\RateLimitExceededException;
 use App\Factory\DateRangeStrategyFactory;
 use App\Managers\TicketManager;
 use App\Models\Ticket;
@@ -14,7 +15,8 @@ use Illuminate\Support\Collection;
 class TicketService
 {
     public function __construct(
-        protected TicketManager $ticketManager
+        protected TicketManager $ticketManager,
+        protected RateLimitService $rateLimitService
     ) {}
 
     /**
@@ -45,6 +47,41 @@ class TicketService
     public function createTicketWithCustomer(array $ticketData, ?array $customerData = null, ?int $customerId = null, mixed $files = null): Ticket
     {
         return $this->ticketManager->createTicketWithCustomer($ticketData, $customerData, $customerId, $files);
+    }
+
+    /**
+     * Create a ticket with rate limiting check
+     *
+     * @param  array<string, mixed>  $ticketData
+     * @param  array<string, mixed>|null  $customerData
+     */
+    public function createTicketWithRateLimit(array $ticketData, ?array $customerData = null, ?int $customerId = null, mixed $files = null): Ticket
+    {
+        // Only apply rate limiting when creating ticket for a new customer (not using existing customer_id)
+        if (! $customerId && $customerData) {
+            $email = $customerData['email'] ?? null;
+            $phone = $customerData['phone'] ?? null;
+
+            if (! $this->rateLimitService->canSubmitTicket($email, $phone)) {
+                $remainingTime = $this->rateLimitService->getRemainingTime($email, $phone);
+
+                throw new RateLimitExceededException(
+                    'Rate limit exceeded. Please try again later.',
+                    $remainingTime
+                );
+            }
+        }
+
+        $ticket = $this->createTicketWithCustomer($ticketData, $customerData, $customerId, $files);
+
+        // Only record submission for rate limiting when creating for a new customer
+        if (! $customerId && $customerData) {
+            $email = $customerData['email'] ?? null;
+            $phone = $customerData['phone'] ?? null;
+            $this->rateLimitService->recordTicketSubmission($email, $phone);
+        }
+
+        return $ticket;
     }
 
     public function findTicketById(int $id): ?Ticket
@@ -150,12 +187,14 @@ class TicketService
         $tickets = $this->ticketManager->getTicketsWithStatusCount();
 
         $result = [];
+
         foreach ($tickets as $ticket) {
             $result[$ticket['status']] = $ticket['count'];
         }
 
         // Ensure all possible statuses are present in the result
         $allStatuses = array_column(TicketStatus::cases(), 'value');
+
         foreach ($allStatuses as $status) {
             if (! isset($result[$status])) {
                 $result[$status] = 0;

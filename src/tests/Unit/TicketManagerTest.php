@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Enums\TicketStatus;
+use App\Exceptions\TicketException;
 use App\Managers\TicketManager;
 use App\Models\Customer;
 use App\Models\Ticket;
 use App\Repositories\Interfaces\TicketRepositoryInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 use Tests\TestCase;
 
 class TicketManagerTest extends TestCase
@@ -212,7 +212,7 @@ class TicketManagerTest extends TestCase
             'text' => 'Test ticket description',
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TicketException::class);
         $this->expectExceptionMessage('Either customerData or customerId must be provided');
 
         $this->ticketManager->createTicketWithCustomer($ticketData);

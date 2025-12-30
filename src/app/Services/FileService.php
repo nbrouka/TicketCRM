@@ -6,10 +6,10 @@ namespace App\Services;
 
 use App\Models\Ticket;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class FileService
 {
@@ -21,7 +21,7 @@ class FileService
         $media = $ticket->media()->where('id', $mediaId)->first();
 
         if (! $media) {
-            abort(Response::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('File not found');
         }
 
         // Handle testing environment separately
@@ -35,11 +35,11 @@ class FileService
         $allowedDir = realpath(storage_path('app/public/'));
 
         if (! $realPath || ! str_starts_with($realPath, $allowedDir)) {
-            abort(Response::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('File not found');
         }
 
         if (! file_exists($filePath)) {
-            abort(Response::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('File not found');
         }
 
         return response()->download($filePath, $media->file_name);
@@ -99,7 +99,7 @@ class FileService
             $normalizedStoragePath = $this->normalizePath(Storage::disk('public')->path(''));
 
             if (! str_starts_with($normalizedPath, $normalizedStoragePath)) {
-                abort(Response::HTTP_NOT_FOUND);
+                throw new NotFoundHttpException('File not found');
             }
 
             return response()->download($filePath, $media->file_name);
@@ -114,13 +114,13 @@ class FileService
             $normalizedStoragePath = $this->normalizePath(Storage::disk('public')->path(''));
 
             if (! str_starts_with($normalizedPath, $normalizedStoragePath)) {
-                abort(Response::HTTP_NOT_FOUND);
+                throw new NotFoundHttpException('File not found');
             }
 
             return response()->download($filePath, $media->file_name);
         }
 
-        abort(Response::HTTP_NOT_FOUND);
+        throw new NotFoundHttpException('File not found');
     }
 
     /**

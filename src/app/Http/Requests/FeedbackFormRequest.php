@@ -26,12 +26,10 @@ class FeedbackFormRequest extends FormRequest
     {
         return [
             'email' => 'required|email',
-            'phone' => 'nullable|string|regex:/^\+[1-9]\d{1,14}$/|max:15',
+            'phone' => 'required|string|regex:/^\+[1-9]\d{1,14}$/|max:15',
             'name' => 'required|string|max:255',
             'theme' => 'required|string|max:255',
             'text' => 'required|string',
-            'files' => 'nullable|array|max:5', // Maximum 5 files
-            'files.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,txt|max:10240', // 10MB max per file
             'attachments' => 'nullable|array|max:5', // Maximum 5 attachments from feedback widget
             'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,txt|max:10240', // 10MB max per attachment
         ];
@@ -48,6 +46,7 @@ class FeedbackFormRequest extends FormRequest
             'email.required' => 'Email is required.',
             'email.email' => 'Email must be a valid email address.',
             'phone.regex' => 'Phone number must be in international format (e.g., +1234567890).',
+            'phone.required' => 'Phone is required.',
             'name.required' => 'Customer name is required.',
             'theme.required' => 'Ticket theme is required.',
             'text.required' => 'Ticket text is required.',

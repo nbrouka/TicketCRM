@@ -8,8 +8,10 @@ use App\Enums\TicketStatus;
 use App\Models\Customer;
 use App\Models\Ticket;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -23,6 +25,9 @@ class TicketControllerTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+
+        // Flush Redis to ensure clean state for tests
+        Redis::flushall();
     }
 
     public function test_api_store_creates_new_ticket_with_new_customer()
@@ -218,8 +223,11 @@ class TicketControllerTest extends TestCase
 
     public function test_statistics_endpoint_returns_ticket_counts()
     {
-        // Create tickets for different time periods
-        $now = now();
+        // Set a fixed date to ensure consistent behavior
+        $now = now()->setYear(2023)->setMonth(5)->setDay(15); // Fixed date: May 15, 2023
+        // Freeze time to ensure all date operations use the same fixed time
+        Carbon::setTestNow($now);
+
         $today = $now->copy()->startOfDay();
         $weekStart = $now->copy()->startOfWeek();
         $monthStart = $now->copy()->startOfMonth();
@@ -255,5 +263,83 @@ class TicketControllerTest extends TestCase
 
         // Should have 12 tickets created this month (3 today + 4 this week + 5 other days this month)
         $this->assertEquals(12, $data['month']);
+
+        // Reset the test time
+        Carbon::setTestNow();
+    }
+
+    public function test_index_returns_tickets_with_cursor_pagination()
+    {
+        // Create multiple tickets
+        $tickets = Ticket::factory()->count(20)->create();
+
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/tickets');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'data',
+            'links' => [
+                'first',
+                'last',
+                'prev',
+                'next',
+            ],
+            'meta' => [
+                'path',
+                'per_page',
+                'next_cursor',
+                'prev_cursor',
+            ],
+        ]);
+
+        // Check that we get the default number of tickets (15)
+        $responseData = $response->json();
+        $this->assertCount(15, $responseData['data']);
+        $this->assertEquals(15, $responseData['meta']['per_page']);
+
+        // Check that next cursor exists (pagination)
+        $this->assertNotNull($responseData['links']['next']);
+    }
+
+    public function test_index_returns_tickets_with_custom_limit()
+    {
+        // Create multiple tickets
+        $tickets = Ticket::factory()->count(20)->create();
+
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/tickets?limit=5');
+
+        $response->assertStatus(200);
+
+        // Check that we get the custom number of tickets (5)
+        $responseData = $response->json();
+        $this->assertCount(5, $responseData['data']);
+        $this->assertEquals(5, $responseData['meta']['per_page']);
+    }
+
+    public function test_index_returns_tickets_sorted_by_created_at_desc()
+    {
+        // Create tickets with specific created_at times
+        $now = now()->setYear(2023)->setMonth(5)->setDay(15); // Fixed date: May 15, 2023
+        // Freeze time to ensure consistent behavior during the test
+        Carbon::setTestNow($now);
+
+        $ticket1 = Ticket::factory()->create(['created_at' => $now->copy()->subDays(2)]);
+        $ticket2 = Ticket::factory()->create(['created_at' => $now->copy()->subDays(1)]);
+        $ticket3 = Ticket::factory()->create(['created_at' => $now]);
+
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/tickets?limit=10');
+
+        $response->assertStatus(200);
+
+        $responseData = $response->json();
+        $data = $responseData['data'];
+
+        // Check that tickets are sorted by created_at desc (newest first)
+        $this->assertEquals($ticket3->id, $data[0]['id']);
+        $this->assertEquals($ticket2->id, $data[1]['id']);
+        $this->assertEquals($ticket1->id, $data[2]['id']);
+
+        // Reset the test time
+        Carbon::setTestNow();
     }
 }

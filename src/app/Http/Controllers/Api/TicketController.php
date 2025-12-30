@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\RateLimitExceededException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FeedbackFormRequest;
 use App\Http\Requests\TicketFormRequest;
@@ -31,7 +32,7 @@ class TicketController extends Controller
 {
     public function __construct(
         protected TicketService $ticketService,
-        protected FileService $fileService,
+        protected FileService $fileService
     ) {}
 
     /**
@@ -85,12 +86,16 @@ class TicketController extends Controller
     )]
     public function storeForAuthenticated(TicketFormRequest $request): JsonResponse
     {
-        $ticket = $this->ticketService->createTicketWithCustomer(
-            $request->only(['theme', 'text']),
-            $request->only(['name', 'phone', 'email']),
-            $request->input('customer_id'),
-            $this->fileService->extractFilesFromRequest($request)
-        );
+        try {
+            $ticket = $this->ticketService->createTicketWithRateLimit(
+                $request->only(['theme', 'text']),
+                $request->only(['name', 'phone', 'email']),
+                $request->input('customer_id'),
+                $this->fileService->extractFilesFromRequest($request)
+            );
+        } catch (RateLimitExceededException $e) {
+            return $e->render($request);
+        }
 
         return response()->json([
             'message' => 'Ticket created successfully',
@@ -147,12 +152,16 @@ class TicketController extends Controller
     )]
     public function store(FeedbackFormRequest $request): JsonResponse
     {
-        $ticket = $this->ticketService->createTicketWithCustomer(
-            $request->only(['theme', 'text']),
-            $request->only(['name', 'phone', 'email']),
-            null,
-            $this->fileService->extractFilesFromRequest($request)
-        );
+        try {
+            $ticket = $this->ticketService->createTicketWithRateLimit(
+                $request->only(['theme', 'text']),
+                $request->only(['name', 'phone', 'email']),
+                null, // No customer_id for feedback form
+                $this->fileService->extractFilesFromRequest($request)
+            );
+        } catch (RateLimitExceededException $e) {
+            return $e->render($request);
+        }
 
         return response()->json([
             'message' => 'Ticket created successfully',
@@ -166,9 +175,25 @@ class TicketController extends Controller
     #[OA\Get(
         path: '/api/tickets',
         summary: 'Get all tickets',
-        description: 'Returns a list of all tickets for authenticated user',
+        description: 'Returns a list of all tickets for authenticated user with cursor pagination',
         tags: ['Authenticated Tickets'],
         security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'cursor',
+                in: 'query',
+                required: false,
+                description: 'Cursor for pagination',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'limit',
+                in: 'query',
+                required: false,
+                description: 'Number of records per page (default: 15)',
+                schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15)
+            ),
+        ],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
@@ -178,6 +203,26 @@ class TicketController extends Controller
                     schema: new OA\Schema(
                         properties: [
                             new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Ticket')),
+                            new OA\Property(
+                                property: 'links',
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'first', type: 'string', nullable: true),
+                                    new OA\Property(property: 'last', type: 'string', nullable: true),
+                                    new OA\Property(property: 'prev', type: 'string', nullable: true),
+                                    new OA\Property(property: 'next', type: 'string', nullable: true),
+                                ]
+                            ),
+                            new OA\Property(
+                                property: 'meta',
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'path', type: 'string'),
+                                    new OA\Property(property: 'per_page', type: 'integer'),
+                                    new OA\Property(property: 'next_cursor', type: 'string', nullable: true),
+                                    new OA\Property(property: 'prev_cursor', type: 'string', nullable: true),
+                                ]
+                            ),
                         ]
                     )
                 )
@@ -187,7 +232,7 @@ class TicketController extends Controller
     )]
     public function index(): JsonResponse
     {
-        $tickets = $this->ticketService->getAllTickets();
+        $tickets = $this->ticketService->getFilteredTickets(request());
 
         return response()->json(new TicketCollection($tickets));
     }
@@ -229,12 +274,6 @@ class TicketController extends Controller
     )]
     public function show(Ticket $ticket): JsonResponse
     {
-        $ticket = $this->ticketService->findTicketById($ticket->id);
-
-        if (! $ticket) {
-            return response()->json(['message' => 'Ticket not found'], Response::HTTP_NOT_FOUND);
-        }
-
         return response()->json(new TicketResource($ticket));
     }
 

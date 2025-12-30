@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Managers;
 
+use App\Exceptions\TicketException;
 use App\Filters\TicketFilter;
 use App\Models\Customer;
 use App\Models\Ticket;
 use App\Repositories\Interfaces\TicketRepositoryInterface;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
-use InvalidArgumentException;
 
 class TicketManager
 {
@@ -27,6 +27,10 @@ class TicketManager
     {
         $filter = new TicketFilter($request);
 
+        // Get limit from request, default to DEFAULT_PER_PAGE, max 100
+        $limit = $request?->input('limit', self::DEFAULT_PER_PAGE);
+        // Ensure limit is between 1 and 100
+        $limit = min(max((int) $limit, 1), 100);
         // Apply filters
         $query = Ticket::with(['customer:id,name,email,phone', 'media'])
             ->filter($filter);
@@ -34,7 +38,7 @@ class TicketManager
         // Sort by created_at desc and id desc by default (important for cursor pagination)
         $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
 
-        return $query->cursorPaginate(self::DEFAULT_PER_PAGE)->withQueryString();
+        return $query->cursorPaginate($limit)->withQueryString();
     }
 
     /** @param array<string, mixed> $data */
@@ -142,7 +146,7 @@ class TicketManager
         }
 
         if (! $customerData) {
-            throw new InvalidArgumentException('Either customerData or customerId must be provided');
+            throw new TicketException('Either customerData or customerId must be provided');
         }
 
         $customer = $this->findOrCreateCustomer($customerData);

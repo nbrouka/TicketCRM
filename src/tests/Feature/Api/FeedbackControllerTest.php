@@ -8,12 +8,21 @@ use App\Models\Customer;
 use App\Models\Ticket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FeedbackControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Flush Redis to ensure clean state for tests
+        Redis::flushall();
+    }
 
     public function test_feedback_store_creates_new_ticket_with_customer()
     {

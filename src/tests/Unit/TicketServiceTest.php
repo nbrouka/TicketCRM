@@ -6,7 +6,10 @@ namespace Tests\Unit;
 
 use App\Managers\TicketManager;
 use App\Models\Ticket;
+use App\Repositories\Interfaces\TicketRepositoryInterface;
+use App\Services\RateLimitService;
 use App\Services\TicketService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,15 +26,22 @@ class TicketServiceTest extends TestCase
         parent::setUp();
 
         // Create a mock repository for the TicketManager
-        $ticketRepositoryMock = $this->createMock(\App\Repositories\Interfaces\TicketRepositoryInterface::class);
+        $ticketRepositoryMock = $this->createMock(TicketRepositoryInterface::class);
 
         $this->ticketManager = new TicketManager($ticketRepositoryMock);
-        $this->ticketService = new TicketService($this->ticketManager);
+
+        // Create a mock RateLimitService
+        $rateLimitServiceMock = $this->createMock(RateLimitService::class);
+
+        $this->ticketService = new TicketService($this->ticketManager, $rateLimitServiceMock);
     }
 
     public function test_get_ticket_statistics_returns_correct_counts()
     {
-        $now = now();
+        $now = now()->setYear(2023)->setMonth(5)->setDay(15); // Fixed date: May 15, 2023
+        // Freeze time to ensure all date operations use the same fixed time
+        Carbon::setTestNow($now);
+
         $today = $now->copy()->startOfDay();
         $weekStart = $now->copy()->startOfWeek();
         $monthStart = $now->copy()->startOfMonth();
@@ -58,6 +68,9 @@ class TicketServiceTest extends TestCase
 
         // Should have 9 tickets created this month (2 today + 3 this week + 4 other days this month)
         $this->assertEquals(9, $statistics['month']);
+
+        // Reset the test time
+        Carbon::setTestNow();
     }
 
     public function test_get_ticket_statistics_handles_empty_data()
