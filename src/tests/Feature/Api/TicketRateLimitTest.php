@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
@@ -16,8 +17,14 @@ class TicketRateLimitTest extends TestCase
 
     public function test_rate_limit_blocks_additional_tickets_from_same_email_in_24_hours(): void
     {
-        // Clear any existing rate limit data
-        Redis::flushall();
+        // Skip Redis flush in testing environment to avoid connection issues
+        if (app()->environment('testing')) {
+            // In testing environment, clear cache to ensure clean state
+            Cache::flush();
+        } else {
+            // Clear any existing rate limit data
+            Redis::flushall();
+        }
 
         $customerData = [
             'email' => 'test@example.com',
@@ -45,8 +52,14 @@ class TicketRateLimitTest extends TestCase
 
     public function test_rate_limit_blocks_additional_tickets_from_same_phone_in_24_hours(): void
     {
-        // Clear any existing rate limit data
-        Redis::flushall();
+        // Skip Redis flush in testing environment to avoid connection issues
+        if (app()->environment('testing')) {
+            // In testing environment, clear cache to ensure clean state
+            Cache::flush();
+        } else {
+            // Clear any existing rate limit data
+            Redis::flushall();
+        }
 
         $customerData = [
             'email' => 'test2@example.com',
@@ -77,8 +90,14 @@ class TicketRateLimitTest extends TestCase
 
     public function test_rate_limit_allows_different_email_and_phone(): void
     {
-        // Clear any existing rate limit data
-        Redis::flushall();
+        // Skip Redis flush in testing environment to avoid connection issues
+        if (app()->environment('testing')) {
+            // In testing environment, clear cache to ensure clean state
+            Cache::flush();
+        } else {
+            // Clear any existing rate limit data
+            Redis::flushall();
+        }
 
         $customerData1 = [
             'email' => 'user1@example.com',
@@ -112,8 +131,14 @@ class TicketRateLimitTest extends TestCase
 
     public function test_rate_limit_works_for_authenticated_tickets(): void
     {
-        // Clear any existing rate limit data
-        Redis::flushall();
+        // Skip Redis flush in testing environment to avoid connection issues
+        if (app()->environment('testing')) {
+            // In testing environment, clear cache to ensure clean state
+            Cache::flush();
+        } else {
+            // Clear any existing rate limit data
+            Redis::flushall();
+        }
 
         // Create a user for authentication
         $user = User::factory()->create();

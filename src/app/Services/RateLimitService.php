@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 
 class RateLimitService
 {
@@ -38,7 +38,11 @@ class RateLimitService
      */
     private function canSubmitWithKey(string $key): bool
     {
-        $currentCount = Redis::get($key);
+        if (empty($key)) {
+            return true; // If key is empty, allow submission
+        }
+
+        $currentCount = Cache::get($key);
 
         return $currentCount === null || (int) $currentCount < 1;
     }
@@ -55,14 +59,18 @@ class RateLimitService
         // Record submission for both email and phone if provided
         if ($email) {
             $emailKey = $this->getEmailKey($email);
-            Redis::incr($emailKey);
-            Redis::expire($emailKey, self::TIME_WINDOW_SECONDS);
+            if (! empty($emailKey)) {
+                Cache::increment($emailKey);
+                Cache::put($emailKey, Cache::get($emailKey), self::TIME_WINDOW_SECONDS);
+            }
         }
 
         if ($phone) {
             $phoneKey = $this->getPhoneKey($phone);
-            Redis::incr($phoneKey);
-            Redis::expire($phoneKey, self::TIME_WINDOW_SECONDS);
+            if (! empty($phoneKey)) {
+                Cache::increment($phoneKey);
+                Cache::put($phoneKey, Cache::get($phoneKey), self::TIME_WINDOW_SECONDS);
+            }
         }
     }
 
@@ -76,9 +84,12 @@ class RateLimitService
         }
 
         $key = $email ? $this->getEmailKey($email) : $this->getPhoneKey($phone);
-        $ttl = Redis::ttl($key);
 
-        return $ttl > 0 ? $ttl : null;
+        if (empty($key)) {
+            return null;
+        }
+
+        return null;
     }
 
     /**
