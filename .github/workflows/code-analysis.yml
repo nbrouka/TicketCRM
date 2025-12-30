@@ -40,9 +40,9 @@ jobs:
       - name: Run tests
         run: |
           cp .env.ci .env
-          # Create a dummy Vite manifest with required entries to prevent errors
+          # Create a comprehensive dummy Vite manifest with all required entries to prevent errors
           mkdir -p public/build
-          echo '{"resources/css/app.css": {"file": "assets/app.css", "src": "resources/css/app.css", "isEntry": true}, "resources/js/app.js": {"file": "assets/app.js", "src": "resources/js/app.js", "isEntry": true}}' > public/build/manifest.json
+          echo '{"resources/css/app.css": {"file": "assets/app.css", "src": "resources/css/app.css", "isEntry": true}, "resources/css/adminlte.css": {"file": "assets/adminlte.css", "src": "resources/css/adminlte.css", "isEntry": true}, "resources/css/dashboard.css": {"file": "assets/dashboard.css", "src": "resources/css/dashboard.css", "isEntry": true}, "resources/js/app.js": {"file": "assets/app.js", "src": "resources/js/app.js", "isEntry": true}, "resources/js/adminlte.js": {"file": "assets/adminlte.js", "src": "resources/js/adminlte.js", "isEntry": true}, "resources/js/chart.js": {"file": "assets/chart.js", "src": "resources/js/chart.js", "isEntry": true}, "resources/js/dashboard.js": {"file": "assets/dashboard.js", "src": "resources/js/dashboard.js", "isEntry": true}, "resources/js/tickets.js": {"file": "assets/tickets.js", "src": "resources/js/tickets.js", "isEntry": true}, "resources/js/feedback-widget.js": {"file": "assets/feedback-widget.js", "src": "resources/js/feedback-widget.js", "isEntry": true}, "resources/js/file-handler.js": {"file": "assets/file-handler.js", "src": "resources/js/file-handler.js", "isEntry": true}, "resources/js/ui-updater.js": {"file": "assets/ui-updater.js", "src": "resources/js/ui-updater.js", "isEntry": true}, "resources/js/utils.js": {"file": "assets/utils.js", "src": "resources/js/utils.js", "isEntry": true}, "resources/js/validation.js": {"file": "assets/validation.js", "src": "resources/js/validation.js", "isEntry": true}, "resources/css/feedback-widget.css": {"file": "assets/feedback-widget.css", "src": "resources/css/feedback-widget.css", "isEntry": true}}' > public/build/manifest.json
           php artisan config:clear
           php artisan test
         working-directory: ./src
