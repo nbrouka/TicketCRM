@@ -36,7 +36,7 @@ class TicketResourceTest extends TestCase
 
         $ticket->load('customer'); // Load the customer relation for the resource
         $resource = new TicketResource($ticket);
-        $data = $resource->toArray(new Request);
+        $data = $resource->toArray(Request::create('/'));
 
         $this->assertEquals($ticket->id, $data['id']);
         $this->assertEquals($ticket->theme, $data['theme']);
@@ -70,7 +70,7 @@ class TicketResourceTest extends TestCase
         $ticketWithMedia = Ticket::with('media')->find($ticket->id);
 
         $resource = new TicketResource($ticketWithMedia);
-        $data = $resource->toArray(new Request);
+        $data = $resource->toArray(Request::create('/'));
 
         $this->assertArrayHasKey('files', $data);
         $this->assertCount(1, $data['files']);
@@ -86,7 +86,7 @@ class TicketResourceTest extends TestCase
         ]);
 
         $resource = new TicketResource($ticket);
-        $data = $resource->toArray(new Request);
+        $data = $resource->toArray(Request::create('/'));
 
         $this->assertNull($data['date_answer']);
     }
@@ -102,7 +102,7 @@ class TicketResourceTest extends TestCase
         ]);
 
         $resource = new TicketResource($ticket);
-        $data = $resource->toArray(new Request);
+        $data = $resource->toArray(Request::create('/'));
 
         $this->assertEquals($date->format('Y-m-d H:i:s'), Carbon::parse($data['date_answer'])->format('Y-m-d H:i:s'));
     }
@@ -126,7 +126,7 @@ class TicketResourceTest extends TestCase
         $collection = collect([$ticket1, $ticket2]);
         $ticketCollection = new TicketCollection($collection);
 
-        $data = $ticketCollection->toArray(new Request);
+        $data = $ticketCollection->toArray(Request::create('/'));
 
         $this->assertCount(2, $data['data']);
         $this->assertEquals($ticket1->theme, $data['data'][0]['theme']);
@@ -142,7 +142,7 @@ class TicketResourceTest extends TestCase
         $paginatedTickets = Ticket::paginate(3);
         $ticketCollection = new TicketCollection($paginatedTickets);
 
-        $data = $ticketCollection->toArray(new Request);
+        $data = $ticketCollection->toArray(Request::create('/'));
 
         // Check that it's a proper collection with pagination metadata
         $this->assertArrayHasKey('data', $data);
@@ -163,7 +163,7 @@ class TicketResourceTest extends TestCase
         ]);
 
         $resource = new TicketResource($ticket->load('customer'));
-        $array = $resource->toArray(new Request);
+        $array = $resource->toArray(Request::create('/'));
 
         // Verify the structure of the serialized data
         $expectedKeys = ['id', 'theme', 'text', 'status', 'date_answer', 'created_at', 'updated_at', 'customer'];
@@ -183,7 +183,7 @@ class TicketResourceTest extends TestCase
             ]);
 
             $resource = new TicketResource($ticket);
-            $data = $resource->toArray(new Request);
+            $data = $resource->toArray(Request::create('/'));
 
             $this->assertEquals($status->value, $data['status']);
         }

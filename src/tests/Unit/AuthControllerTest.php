@@ -30,8 +30,7 @@ class AuthControllerTest extends TestCase
 
     public function test_register_method_creates_user()
     {
-        $request = new RegisterRequest;
-        $request->merge([
+        $request = RegisterRequest::create('/', 'POST', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
@@ -58,8 +57,7 @@ class AuthControllerTest extends TestCase
             'password' => Hash::make('password'),
         ]);
 
-        $request = new LoginRequest;
-        $request->merge([
+        $request = LoginRequest::create('/', 'POST', [
             'email' => 'test@example.com',
             'password' => 'password',
         ]);
@@ -77,8 +75,7 @@ class AuthControllerTest extends TestCase
             'password' => Hash::make('password'),
         ]);
 
-        $request = new LoginRequest;
-        $request->merge([
+        $request = LoginRequest::create('/', 'POST', [
             'email' => 'test@example.com',
             'password' => 'wrong_password',
         ]);
@@ -93,7 +90,7 @@ class AuthControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $request = new Request;
+        $request = Request::create('/');
         $request->setLaravelSession($this->app['session']->driver());
 
         $this->app['session']->driver()->put('login_'.$this->app['auth']->getDefaultDriver().'_'.$user->id, $user->id);
@@ -107,15 +104,14 @@ class AuthControllerTest extends TestCase
 
     public function test_register_method_fails_with_missing_fields()
     {
-        $request = new RegisterRequest;
+        $request = RegisterRequest::create('/', 'POST', [
+            'name' => '',
+            'email' => 'invalid-email',
+            'password' => '',
+            'password_confirmation' => '',
+        ]);
         $request->setContainer(app())
-            ->setRedirector(app('redirect'))
-            ->merge([
-                'name' => '',
-                'email' => 'invalid-email',
-                'password' => '',
-                'password_confirmation' => '',
-            ]);
+            ->setRedirector(app('redirect'));
 
         $rules = $request->rules();
 

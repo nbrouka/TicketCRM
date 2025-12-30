@@ -48,7 +48,7 @@ class TicketManagerTest extends TestCase
         $customer = Customer::factory()->create();
         Ticket::factory()->count(20)->create(['customer_id' => $customer->id]);
 
-        $request = new Request;
+        $request = Request::create('/');
         $tickets = $this->ticketManager->getFilteredTickets($request);
 
         $this->assertEquals(TicketManager::DEFAULT_PER_PAGE, $tickets->count());
@@ -69,7 +69,7 @@ class TicketManagerTest extends TestCase
             'status' => TicketStatus::IN_PROGRESS,
         ]);
 
-        $request = new Request(['status' => TicketStatus::NEW->value]);
+        $request = Request::create('/', 'GET', ['status' => TicketStatus::NEW->value]);
         $tickets = $this->ticketManager->getFilteredTickets($request);
 
         $this->assertCount(1, $tickets);
@@ -237,7 +237,7 @@ class TicketManagerTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $request = new Request;
+        $request = Request::create('/');
         $tickets = $this->ticketManager->getFilteredTickets($request);
 
         // The most recent ticket should be first
